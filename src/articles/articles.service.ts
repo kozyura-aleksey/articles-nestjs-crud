@@ -21,7 +21,8 @@ export class ArticlesService {
     author_id: number,
   ): Promise<IArticle> {
     try {
-      const article = await this.articlesRepository.save({
+      await this.cacheManager.del('articles');
+      const article: IArticle = await this.articlesRepository.save({
         ...dto,
         author_id: author_id,
       });
@@ -32,57 +33,73 @@ export class ArticlesService {
     }
   }
 
-  async getArticle(id: number) {
-    const article = await this.articlesRepository.findOne({
+  async getArticle(id: number, author_id: number): Promise<IArticle> {
+    const article: IArticle = await this.articlesRepository.findOne({
       where: {
         id: id,
+        author_id: author_id,
       },
     });
 
     return article;
   }
 
-  async getArticles(offset?: number, limit?: number) {
-    const cachedData = await this.cacheManager.get('articles');
+  async getArticles(
+    author_id: number,
+    offset?: number,
+    limit?: number,
+  ): Promise<IArticle[]> {
+    const cachedData: IArticle[] = await this.cacheManager.get('articles');
     if (cachedData) {
       return cachedData;
     }
-    const articles = await this.articlesRepository.find({
+    const articles: IArticle[] = await this.articlesRepository.find({
       skip: offset,
       take: limit,
+      where: {
+        author_id: author_id,
+      },
     });
     await this.cacheManager.set('articles', articles);
     return articles;
   }
 
-  async updateArticle(id: number, dto: UpdateArticleDto) {
+  async updateArticle(
+    id: number,
+    dto: UpdateArticleDto,
+    author_id: number,
+  ): Promise<IArticle> {
     try {
-      const article = await this.articlesRepository.update(
+      await this.cacheManager.del('articles');
+      await this.articlesRepository.update(
         {
           id: id,
+          author_id: author_id,
         },
         {
           ...dto,
         },
       );
-      return article;
+      return this.getArticle(id, author_id);
     } catch {
       throw new BadRequestException('Не удалось обновить статью');
     }
   }
 
-  async deleteArticle(id: number) {
+  async deleteArticle(id: number, author_id: number): Promise<string> {
     try {
       await this.articlesRepository.delete({
         id: id,
+        author_id: author_id,
       });
+      return 'Статья удалена';
     } catch {
       throw new BadRequestException('Не удалось удалить статью');
     }
   }
 
-  async filterArticlesByAuthorId(author_id: number) {
-    const articles = await this.articlesRepository.find({
+  async filterArticlesByAuthorId(author_id: number): Promise<IArticle[]> {
+    const articles: IArticle[] = await this.articlesRepository.find({
       where: {
         author_id: author_id,
       },

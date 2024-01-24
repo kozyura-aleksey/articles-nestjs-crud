@@ -26,18 +26,23 @@ export class ArticlesController {
   @CacheKey('articles')
   @CacheTTL(60)
   async getArticles(
+    @UserDecorator() user,
     @Query('offset') offset?: number,
     @Query('limit') limit?: number,
   ) {
     console.log('offset ' + offset);
     console.log('limit ' + limit);
-    const articles = await this.articlesService.getArticles(offset, limit);
+    const articles = await this.articlesService.getArticles(
+      user.id,
+      offset,
+      limit,
+    );
     return articles;
   }
 
   @Get(':id')
-  async getArticle(@Param('id') id: number) {
-    const article = await this.articlesService.getArticle(id);
+  async getArticle(@Param('id') id: number, @UserDecorator() user) {
+    const article = await this.articlesService.getArticle(id, user.id);
     return article;
   }
 
@@ -50,13 +55,19 @@ export class ArticlesController {
 
   @UseGuards(JwtAuthGuard)
   @Put(':id')
-  async updateArticle(@Param('id') id: number, @Body() dto: UpdateArticleDto) {
-    await this.articlesService.updateArticle(id, dto);
+  async updateArticle(
+    @Param('id') id: number,
+    @Body() dto: UpdateArticleDto,
+    @UserDecorator() user,
+  ) {
+    const article = await this.articlesService.updateArticle(id, dto, user.id);
+    return article;
   }
 
   @Delete(':id')
-  async deleteArticle(@Param('id') id: number) {
-    await this.articlesService.deleteArticle(id);
+  async deleteArticle(@Param('id') id: number, @UserDecorator() user) {
+    const article = await this.articlesService.deleteArticle(id, user.id);
+    return article;
   }
 
   @Get('author/:authorId')

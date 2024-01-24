@@ -1,0 +1,25 @@
+version: '3.0'
+
+services:
+  postgres:
+    image: postgres:latest
+    ports:
+      - '5432:5432'
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: admin
+      POSTGRES_DB: articles-crud
+      POSTGRES_HOST: localhost
+
+  redis:
+    container_name: redis
+    image: redis:alpine
+    ports:
+      - 6379:6379
+    volumes:
+      - redis:/data
+
+volumes:
+  postgres:
+  redis:
+    driver: local

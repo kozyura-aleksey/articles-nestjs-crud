@@ -10,6 +10,7 @@ import { UsersService } from 'src/users/users.service';
 import * as bcrypt from 'bcryptjs';
 import { CreateUserDto } from 'src/users/dto/create.user.dto';
 import { IUser } from 'src/users/interfaces/user.interface';
+import { LoginUserDto } from 'src/users/dto/login.user.dto';
 
 @Injectable()
 export class AuthService {
@@ -51,7 +52,7 @@ export class AuthService {
     return token;
   }
 
-  async loginUser(dto: CreateUserDto): Promise<Record<string, string>> {
+  async loginUser(dto: LoginUserDto): Promise<Record<string, string>> {
     const user: IUser = await this.validateUser(dto);
     let token: Record<string, string>;
     if (user) {
@@ -60,7 +61,7 @@ export class AuthService {
     return token;
   }
 
-  async validateUser(dto: CreateUserDto) {
+  async validateUser(dto: LoginUserDto) {
     const user: IUser = await this.usersService.findUser(dto.email);
     if (!user) {
       throw new HttpException(

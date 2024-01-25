@@ -68,19 +68,23 @@ export class ArticlesService {
     id: number,
     dto: UpdateArticleDto,
     author_id: number,
-  ): Promise<IArticle> {
+  ): Promise<IArticle | string> {
     try {
-      await this.cacheManager.del('articles');
-      await this.articlesRepository.update(
-        {
-          id: id,
-          author_id: author_id,
-        },
-        {
-          ...dto,
-        },
-      );
-      return this.getArticle(id, author_id);
+      if (await this.getArticle(id, author_id)) {
+        await this.cacheManager.del('articles');
+        await this.articlesRepository.update(
+          {
+            id: id,
+            author_id: author_id,
+          },
+          {
+            ...dto,
+          },
+        );
+        return await this.getArticle(id, author_id);
+      } else {
+        return 'Статья не найдена';
+      }
     } catch {
       throw new BadRequestException('Не удалось обновить статью');
     }
@@ -88,11 +92,11 @@ export class ArticlesService {
 
   async deleteArticle(id: number, author_id: number): Promise<string> {
     try {
-      await this.articlesRepository.delete({
+      const article = await this.articlesRepository.delete({
         id: id,
         author_id: author_id,
       });
-      return 'Статья удалена';
+      return article.affected === 0 ? 'Статья не найдена' : 'Статья удалена';
     } catch {
       throw new BadRequestException('Не удалось удалить статью');
     }

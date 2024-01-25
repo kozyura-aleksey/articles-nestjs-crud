@@ -18,11 +18,12 @@ import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import UserDecorator from 'src/decorators/user.decorator';
 
 @Controller('articles')
+@UseGuards(JwtAuthGuard)
 export class ArticlesController {
   constructor(private readonly articlesService: ArticlesService) {}
 
   @Get()
-  //@UseInterceptors(CacheInterceptor)
+  @UseInterceptors(CacheInterceptor)
   @CacheKey('articles')
   @CacheTTL(60)
   async getArticles(
@@ -30,8 +31,6 @@ export class ArticlesController {
     @Query('offset') offset?: number,
     @Query('limit') limit?: number,
   ) {
-    console.log('offset ' + offset);
-    console.log('limit ' + limit);
     const articles = await this.articlesService.getArticles(
       user.id,
       offset,
@@ -47,13 +46,11 @@ export class ArticlesController {
   }
 
   @Post()
-  @UseGuards(JwtAuthGuard)
   async createArticle(@Body() dto: CreateArticleDto, @UserDecorator() user) {
     const article = await this.articlesService.createArticle(dto, user.id);
     return article;
   }
 
-  @UseGuards(JwtAuthGuard)
   @Put(':id')
   async updateArticle(
     @Param('id') id: number,
